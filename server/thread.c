@@ -388,6 +388,13 @@ static int thread_signaled( struct object *obj, struct wait_queue_entry *entry )
     return (mythread->state == TERMINATED);
 }
 
+static unsigned int thread_get_fsync_idx( struct object *obj, enum fsync_type *type )
+{
+    struct thread *thread = (struct thread *)obj;
+    *type = FSYNC_MANUAL_SERVER;
+    return thread->fsync_idx;
+}
+
 static unsigned int thread_map_access( struct object *obj, unsigned int access )
 {
     if (access & GENERIC_READ)    access |= STANDARD_RIGHTS_READ | THREAD_QUERY_INFORMATION | THREAD_GET_CONTEXT;
@@ -437,6 +444,7 @@ static struct thread_apc *create_apc( struct object *owner, const apc_call_t *ca
         apc->result.type = APC_NONE;
         if (owner) grab_object( owner );
     }
+
     return apc;
 }
 
@@ -493,8 +501,19 @@ int set_thread_affinity( struct thread *thread, affinity_t affinity )
 
         CPU_ZERO( &set );
         for (i = 0, mask = 1; mask; i++, mask <<= 1)
-            if (affinity & mask) CPU_SET( i, &set );
-
+            if (affinity & mask)
+            {
+                if (thread->process->cpu_override.cpu_count)
+                {
+                    if (i >= thread->process->cpu_override.cpu_count)
+                        break;
+                    CPU_SET( thread->process->cpu_override.host_cpu_id[i], &set );
+                }
+                else
+                {
+                    CPU_SET( i, &set );
+                }
+            }
         ret = sched_setaffinity( thread->unix_tid, sizeof(set), &set );
     }
 #endif

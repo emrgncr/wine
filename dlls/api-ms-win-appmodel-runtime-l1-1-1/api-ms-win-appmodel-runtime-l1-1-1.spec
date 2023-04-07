@@ -13,9 +13,9 @@
 @ stdcall GetPackageFullName(long ptr ptr) kernel32.GetPackageFullName
 @ stub GetPackageId
 @ stub GetPackageInfo
-@ stub GetPackagePath
+@ stdcall GetPackagePath(ptr long ptr ptr) kernel32.GetPackagePath
 @ stub GetPackagePathByFullName
-@ stub GetPackagesByPackageFamily
+@ stdcall GetPackagesByPackageFamily(wstr ptr ptr ptr ptr) kernel32.GetPackagesByPackageFamily
 @ stub GetStagedPackageOrigin
 @ stub GetStagedPackagePathByFullName
 @ stub OpenPackageInfoByFullName

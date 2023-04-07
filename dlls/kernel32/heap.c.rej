@@ -1,0 +1,17 @@
+--- dlls/kernel32/heap.c
++++ dlls/kernel32/heap.c
+@@ -361,6 +363,14 @@ SIZE_T WINAPI GlobalSize(HGLOBAL hmem)
+       }
+       RtlUnlockHeap(GetProcessHeap());
+    }
++   }
++   __EXCEPT_PAGE_FAULT
++   {
++       SetLastError( ERROR_INVALID_HANDLE );
++       retval = 0;
++   }
++   __ENDTRY
++
+    if (retval == ~(SIZE_T)0) retval = 0;
+    return retval;
+ }

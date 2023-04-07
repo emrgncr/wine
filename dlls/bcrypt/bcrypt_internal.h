@@ -131,6 +131,7 @@ enum alg_id
     ALG_ID_RSA,
 
     /* secret agreement */
+    ALG_ID_DH,
     ALG_ID_ECDH_P256,
 
     /* signature */
@@ -257,5 +258,8 @@ BOOL is_equal_vector( const UCHAR *, ULONG, const UCHAR *, ULONG ) DECLSPEC_HIDD
 
 BOOL gnutls_initialize(void) DECLSPEC_HIDDEN;
 void gnutls_uninitialize(void) DECLSPEC_HIDDEN;
+
+const struct key_funcs *gnutls_lib_init(DWORD reason);
+const struct key_funcs *macos_lib_init(DWORD reason);
 
 #endif /* __BCRYPT_INTERNAL_H */

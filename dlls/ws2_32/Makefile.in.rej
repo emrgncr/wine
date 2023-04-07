@@ -1,0 +1,9 @@
+--- dlls/ws2_32/Makefile.in
++++ dlls/ws2_32/Makefile.in
+@@ -1,5 +1,6 @@
+ MODULE    = ws2_32.dll
+ IMPORTLIB = ws2_32
++IMPORTS = kernelbase
+ DELAYIMPORTS = advapi32 iphlpapi user32
+ EXTRALIBS = $(POLL_LIBS)
+ 

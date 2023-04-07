@@ -46,6 +46,7 @@ AC_ARG_WITH(faudio,    AS_HELP_STRING([--without-faudio],[do not use FAudio (XAu
 AC_ARG_WITH(float-abi, AS_HELP_STRING([--with-float-abi=abi],[specify the ABI (soft|softfp|hard) for ARM platforms]))
 AC_ARG_WITH(fontconfig,AS_HELP_STRING([--without-fontconfig],[do not use fontconfig]))
 AC_ARG_WITH(freetype,  AS_HELP_STRING([--without-freetype],[do not use the FreeType library]))
+AC_ARG_WITH(gcrypt,    AS_HELP_STRING([--without-gcrypt],[do not use libgcrypt]))
 AC_ARG_WITH(gettext,   AS_HELP_STRING([--without-gettext],[do not use gettext]))
 AC_ARG_WITH(gettextpo, AS_HELP_STRING([--with-gettextpo],[use the GetTextPO library to rebuild po files]),
             [if test "x$withval" = "xno"; then ac_cv_header_gettext_po_h=no; fi])
@@ -1454,6 +1455,14 @@ LIBS="$ac_save_LIBS"
 WINE_NOTICE_WITH(curses,[test "x$ac_cv_lib_soname_curses$ac_cv_lib_soname_ncurses" = "x"],
                  [lib(n)curses ${notice_platform}development files not found, curses won't be supported.])
 
+dnl **** Check for libgmp ****
+if test "x$with_gnutls" != "xno"
+then
+    WINE_PACKAGE_FLAGS(GMP,[gmp],[-lgmp],,,
+        [AC_CHECK_HEADERS([gmp.h],
+            [WINE_CHECK_SONAME(gmp,__gmpz_init,,[GMP_CFLAGS=""],[$GMP_LIBS],[[libgmp-*]])])])
+fi
+
 dnl **** Check for SANE ****
 if test "x$with_sane" != "xno"
 then
@@ -1995,6 +2004,19 @@ fi
 WINE_NOTICE_WITH(vkd3d,[test "x$ac_cv_lib_soname_vkd3d" = "x"],
                  [vkd3d ${notice_platform}development files not found (or too old), Direct3D 12 won't be supported.])
 test "x$ac_cv_lib_soname_vkd3d" != "x" || enable_d3d12=${enable_d3d12:-no}
+
+dnl **** Check for gcrypt ****
+if test "x$with_gcrypt" != "xno"
+then
+    WINE_PACKAGE_FLAGS(GCRYPT,[libgcrypt],,,,
+        [AC_CHECK_HEADERS([gcrypt.h])
+        if test "$ac_cv_header_gcrypt_h" = "yes"
+        then
+            WINE_CHECK_SONAME(gcrypt,gcry_sexp_build,,,[$GCRYPT_LIBS])
+        fi])
+fi
+WINE_NOTICE_WITH(gcrypt,[test "x$ac_cv_lib_soname_gcrypt" = "x"],
+                 [libgcrypt ${notice_platform}development files not found, GCRYPT won't be supported.])
 
 dnl **** Check for gcc specific options ****
 
@@ -2802,6 +2824,7 @@ WINE_CONFIG_MAKEFILE(dlls/advapi32)
 WINE_CONFIG_MAKEFILE(dlls/advapi32/tests)
 WINE_CONFIG_MAKEFILE(dlls/advpack)
 WINE_CONFIG_MAKEFILE(dlls/advpack/tests)
+WINE_CONFIG_MAKEFILE(dlls/amd_ags_x64)
 WINE_CONFIG_MAKEFILE(dlls/amsi)
 WINE_CONFIG_MAKEFILE(dlls/amstream)
 WINE_CONFIG_MAKEFILE(dlls/amstream/tests)
@@ -2890,6 +2913,7 @@ WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-profile-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-psapi-ansi-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-psapi-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-psapi-obsolete-l1-1-0)
+WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-psm-appnotify-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-quirks-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-realtime-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/api-ms-win-core-registry-l1-1-0)
@@ -3023,6 +3047,7 @@ WINE_CONFIG_MAKEFILE(dlls/api-ms-win-shell-shellfolders-l1-1-0)
 WINE_CONFIG_MAKEFILE(dlls/apphelp)
 WINE_CONFIG_MAKEFILE(dlls/apphelp/tests)
 WINE_CONFIG_MAKEFILE(dlls/appwiz.cpl)
+WINE_CONFIG_MAKEFILE(dlls/atiadlxx)
 WINE_CONFIG_MAKEFILE(dlls/atl)
 WINE_CONFIG_MAKEFILE(dlls/atl/tests)
 WINE_CONFIG_MAKEFILE(dlls/atl100)

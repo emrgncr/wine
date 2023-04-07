@@ -1141,7 +1141,7 @@ static void build(struct options* opts)
         if (opts->large_address_aware) strarray_add( spec_args, "--large-address-aware" );
     }
 
-    if (opts->subsystem)
+    if (opts->subsystem && strcmp( opts->subsystem, "unixlib" ))
     {
         strarray_add(spec_args, "--subsystem");
         strarray_add(spec_args, opts->subsystem);

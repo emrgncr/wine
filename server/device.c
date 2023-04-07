@@ -763,6 +763,13 @@ static int device_manager_signaled( struct object *obj, struct wait_queue_entry 
     return !list_empty( &manager->requests );
 }
 
+static unsigned int device_manager_get_fsync_idx( struct object *obj, enum fsync_type *type )
+{
+    struct device_manager *manager = (struct device_manager *)obj;
+    *type = FSYNC_MANUAL_SERVER;
+    return manager->fsync_idx;
+}
+
 static void device_manager_destroy( struct object *obj )
 {
     struct device_manager *manager = (struct device_manager *)obj;

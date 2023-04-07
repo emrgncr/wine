@@ -1,0 +1,67 @@
+--- dlls/winex11.drv/x11drv.h
++++ dlls/winex11.drv/x11drv.h
+@@ -683,6 +704,16 @@ extern void xinerama_init( unsigned int width, unsigned int height ) DECLSPEC_HI
+ #define DEPTH_COUNT 3
+ extern const unsigned int *depths DECLSPEC_HIDDEN;
+ 
++struct x11drv_display_setting
++{
++    ULONG_PTR id;
++    BOOL placed;
++    RECT new_rect;
++    RECT old_rect;
++    RECT desired_rect;
++    DEVMODEW desired_mode;
++};
++
+ /* Required functions for changing and enumerating display settings */
+ struct x11drv_settings_handler
+ {
+@@ -726,9 +757,14 @@ struct x11drv_settings_handler
+      *
+      * Return DISP_CHANGE_*, same as ChangeDisplaySettingsExW() return values */
+     LONG (*set_current_mode)(ULONG_PTR id, DEVMODEW *mode);
++
++    /* convert_coordinates() will be called to convert virtual screen coordinates to driver specific coordinates.
++     * This function is optional and can be NULL if driver don't need to convert coordinates */
++    void (*convert_coordinates)(struct x11drv_display_setting *displays, UINT display_count);
+ };
+ 
+ extern void X11DRV_Settings_SetHandler(const struct x11drv_settings_handler *handler) DECLSPEC_HIDDEN;
++extern struct x11drv_settings_handler X11DRV_Settings_GetHandler(void) DECLSPEC_HIDDEN;
+ 
+ extern void X11DRV_init_desktop( Window win, unsigned int width, unsigned int height ) DECLSPEC_HIDDEN;
+ extern void X11DRV_resize_desktop(BOOL) DECLSPEC_HIDDEN;
+--- dlls/winex11.drv/x11drv.h
++++ dlls/winex11.drv/x11drv.h
+@@ -545,7 +545,8 @@ enum x11drv_window_messages
+     WM_X11DRV_RESIZE_DESKTOP,
+     WM_X11DRV_SET_CURSOR,
+     WM_X11DRV_CLIP_CURSOR_NOTIFY,
+-    WM_X11DRV_CLIP_CURSOR_REQUEST
++    WM_X11DRV_CLIP_CURSOR_REQUEST,
++    WM_X11DRV_RELEASE_CURSOR
+ };
+ 
+ /* _NET_WM_STATE properties that we keep track of */
+--- dlls/winex11.drv/x11drv.h
++++ dlls/winex11.drv/x11drv.h
+@@ -679,6 +679,7 @@ extern void X11DRV_expect_error( Display *display, x11drv_error_callback callbac
+ extern int X11DRV_check_error(void) DECLSPEC_HIDDEN;
+ extern void X11DRV_X_to_window_rect( struct x11drv_win_data *data, RECT *rect, int x, int y, int cx, int cy ) DECLSPEC_HIDDEN;
+ extern BOOL is_window_rect_full_screen( const RECT *rect ) DECLSPEC_HIDDEN;
++extern BOOL is_window_rect_full_virtual_screen( const RECT *rect ) DECLSPEC_HIDDEN;
+ extern POINT virtual_screen_to_root( INT x, INT y ) DECLSPEC_HIDDEN;
+ extern POINT root_to_virtual_screen( INT x, INT y ) DECLSPEC_HIDDEN;
+ extern RECT get_virtual_screen_rect(void) DECLSPEC_HIDDEN;
+--- dlls/winex11.drv/x11drv.h
++++ dlls/winex11.drv/x11drv.h
+@@ -290,7 +290,7 @@ enum x11drv_escape_codes
+     X11DRV_SET_DRAWABLE,     /* set current drawable for a DC */
+     X11DRV_START_EXPOSURES,  /* start graphics exposures */
+     X11DRV_END_EXPOSURES,    /* end graphics exposures */
+-    X11DRV_FLUSH_GL_DRAWABLE, /* flush changes made to the gl drawable */
++    X11DRV_PRESENT_DRAWABLE, /* present the drawable on screen */
+     X11DRV_FLUSH_GDI_DISPLAY /* flush the gdi display */
+ };
+ 

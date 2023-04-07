@@ -1,0 +1,25 @@
+--- server/thread.c
++++ server/thread.c
+@@ -1511,7 +1522,7 @@ DECL_HANDLER(init_thread)
+ 
+     if (!process->parent_id)
+         process->affinity = current->affinity = get_thread_affinity( current );
+-    else
++    else if (!process->cpu_override.cpu_count)
+         set_thread_affinity( current, current->affinity );
+ 
+     debug_level = max( debug_level, req->debug_level );
+@@ -1525,10 +1536,12 @@ DECL_HANDLER(init_thread)
+     current->unix_tid = req->unix_tid;
+     current->teb      = req->teb;
+     current->entry_point = req->entry;
++    struct process *process = current->process;
+ 
+     init_thread_context( current );
+     generate_debug_event( current, DbgCreateThreadStateChange, &req->entry );
+-    set_thread_affinity( current, current->affinity );
++    if (!process->cpu_override.cpu_count)
++        set_thread_affinity( current, current->affinity );
+ 
+     reply->pid     = get_process_id( current->process );
+     reply->tid     = get_thread_id( current );

@@ -965,6 +965,13 @@ static int msg_queue_signaled( struct object *obj, struct wait_queue_entry *entr
     return ret || is_signaled( queue );
 }
 
+static unsigned int msg_queue_get_fsync_idx( struct object *obj, enum fsync_type *type )
+{
+    struct msg_queue *queue = (struct msg_queue *)obj;
+    *type = FSYNC_QUEUE;
+    return queue->fsync_idx;
+}
+
 static void msg_queue_satisfied( struct object *obj, struct wait_queue_entry *entry )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
@@ -1561,7 +1568,6 @@ static int send_hook_ll_message( struct desktop *desktop, struct message *hardwa
 
     if (!(hook_thread = get_first_global_hook( id ))) return 0;
     if (!(queue = hook_thread->queue)) return 0;
-    if (is_queue_hung( queue )) return 0;
 
     if (!(msg = mem_alloc( sizeof(*msg) ))) return 0;
 
@@ -3128,4 +3134,19 @@ DECL_HANDLER(update_rawinput_devices)
     current->process->rawinput_mouse = e ? &e->device : NULL;
     e = find_rawinput_device( 1, 6 );
     current->process->rawinput_kbd   = e ? &e->device : NULL;
+}
+
+DECL_HANDLER(fsync_msgwait)
+{
+    struct msg_queue *queue = get_current_queue();
+
+    if (!queue) return;
+    queue->fsync_in_msgwait = req->in_msgwait;
+
+    if (current->process->idle_event && !(queue->wake_mask & QS_SMRESULT))
+        set_event( current->process->idle_event );
+
+    /* and start/stop waiting on the driver */
+    if (queue->fd)
+        set_fd_events( queue->fd, req->in_msgwait ? POLLIN : 0 );
 }

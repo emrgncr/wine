@@ -1,0 +1,10 @@
+--- server/protocol.def
++++ server/protocol.def
+@@ -883,6 +889,7 @@ typedef struct
+ 
+ /* Signal the end of the process initialization */
+ @REQ(init_process_done)
++    VARARG(cpu_override,cpu_topology_override); /* Overridden CPUs to host CPUs mapping. */
+     client_ptr_t teb;          /* TEB of new thread (in process address space) */
+     client_ptr_t peb;          /* PEB of new process (in process address space) */
+     client_ptr_t ldt_copy;     /* address of LDT copy (in process address space) */

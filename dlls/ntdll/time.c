@@ -50,6 +50,7 @@
 #include "wine/unicode.h"
 #include "wine/debug.h"
 #include "ntdll_misc.h"
+#include "intrin.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntdll);
 
@@ -556,6 +557,14 @@ NTSTATUS WINAPI NtQueryPerformanceCounter( LARGE_INTEGER *counter, LARGE_INTEGER
     return STATUS_SUCCESS;
 }
 
+/* 128-bit multiply a by b and return the high 64 bits, same as __umulh */
+static UINT64 multiply_tsc(UINT64 a, UINT64 b)
+{
+    UINT64 ah = a >> 32, al = (UINT32)a, bh = b >> 32, bl = (UINT32)b, m;
+    m = (ah * bl) + (bh * al) + ((al * bl) >> 32);
+    return (ah * bh) + (m >> 32);
+}
+
 /******************************************************************************
  *  RtlQueryPerformanceCounter   [NTDLL.@]
  */
@@ -570,7 +579,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH RtlQueryPerformanceCounter( LARGE_INTEGER *counter
  */
 BOOL WINAPI DECLSPEC_HOTPATCH RtlQueryPerformanceFrequency( LARGE_INTEGER *frequency )
 {
-    frequency->QuadPart = TICKSPERSEC;
+    frequency->QuadPart = user_shared_data->QpcFrequency;
     return TRUE;
 }
 

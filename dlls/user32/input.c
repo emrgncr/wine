@@ -1286,13 +1286,14 @@ int WINAPI GetMouseMovePointsEx(UINT size, LPMOUSEMOVEPOINT ptin, LPMOUSEMOVEPOI
     return -1;
 }
 
+BOOL enable_mouse_in_pointer = FALSE;
+
 /***********************************************************************
  *		EnableMouseInPointer (USER32.@)
  */
 BOOL WINAPI EnableMouseInPointer(BOOL enable)
 {
-    FIXME("(%#x) stub\n", enable);
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    FIXME("(%#x) semi-stub\n", enable);
+    enable_mouse_in_pointer = TRUE;
+    return TRUE;
 }

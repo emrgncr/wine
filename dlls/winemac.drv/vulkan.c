@@ -531,6 +531,8 @@ static VkResult macdrv_vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR *
 
 static const struct vulkan_funcs vulkan_funcs =
 {
+    NULL,
+    NULL,
     macdrv_vkCreateInstance,
     macdrv_vkCreateSwapchainKHR,
     macdrv_vkCreateWin32SurfaceKHR,

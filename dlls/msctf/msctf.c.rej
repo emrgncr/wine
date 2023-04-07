@@ -1,0 +1,14 @@
+--- dlls/msctf/msctf.c
++++ dlls/msctf/msctf.c
+@@ -556,11 +552,9 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
+     switch (fdwReason)
+     {
+         case DLL_PROCESS_ATTACH:
+-            tlsIndex = TlsAlloc();
+             break;
+         case DLL_PROCESS_DETACH:
+             if (fImpLoad) break;
+-            TlsFree(tlsIndex);
+             break;
+     }
+     return TRUE;

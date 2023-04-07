@@ -1,0 +1,14 @@
+--- dlls/ntdll/loader.c
++++ dlls/ntdll/loader.c
+@@ -1345,7 +1345,11 @@ static void call_tls_callbacks( HMODULE module, UINT reason )
+ static void init_builtin_dll( HMODULE module )
+ {
+     void *buffer[16];
++#if defined(__i386__) || defined(__x86_64__)
++    void (__attribute__ ((__sysv_abi__)) **funcs)(int, char **, char **) = (void *)buffer;
++#else
+     void (**funcs)(int, char **, char **) = (void *)buffer;
++#endif
+     SIZE_T i, size;
+     NTSTATUS status;
+ 
