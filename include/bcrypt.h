@@ -46,6 +46,7 @@ typedef LONG NTSTATUS;
 #define BCRYPT_BLOCK_LENGTH         L"BlockLength"
 #define BCRYPT_BLOCK_SIZE_LIST      L"BlockSizeList"
 #define BCRYPT_CHAINING_MODE        L"ChainingMode"
+#define BCRYPT_DH_PARAMETERS        L"DHParameters"
 #define BCRYPT_EFFECTIVE_KEY_LENGTH L"EffectiveKeyLength"
 #define BCRYPT_HASH_BLOCK_LENGTH    L"HashBlockLength"
 #define BCRYPT_HASH_LENGTH          L"HashDigestLength"
@@ -104,6 +105,7 @@ static const WCHAR BCRYPT_AUTH_TAG_LENGTH[] = {'A','u','t','h','T','a','g','L','
 static const WCHAR BCRYPT_BLOCK_LENGTH[] = {'B','l','o','c','k','L','e','n','g','t','h',0};
 static const WCHAR BCRYPT_BLOCK_SIZE_LIST[] = {'B','l','o','c','k','S','i','z','e','L','i','s','t',0};
 static const WCHAR BCRYPT_CHAINING_MODE[] = {'C','h','a','i','n','i','n','g','M','o','d','e',0};
+static const WCHAR BCRYPT_DH_PARAMETERS[] = {'D','H','P','a','r','a','m','e','t','e','r','s',0};
 static const WCHAR BCRYPT_EFFECTIVE_KEY_LENGTH[] = {'E','f','f','e','c','t','i','v','e','K','e','y','L','e','n','g','t','h',0};
 static const WCHAR BCRYPT_HASH_BLOCK_LENGTH[] = {'H','a','s','h','B','l','o','c','k','L','e','n','g','t','h',0};
 static const WCHAR BCRYPT_HASH_LENGTH[] = {'H','a','s','h','D','i','g','e','s','t','L','e','n','g','t','h',0};
@@ -251,6 +253,22 @@ typedef struct _BCRYPT_PKCS1_PADDING_INFO
 #define BCRYPT_PAD_PSS                      0x00000008
 #define BCRYPT_PAD_PKCS1_OPTIONAL_HASH_OID  0x00000010
 
+#define BCRYPT_DH_PARAMETERS_MAGIC 0x4d504844
+#define BCRYPT_DH_PUBLIC_MAGIC     0x42504844
+#define BCRYPT_DH_PRIVATE_MAGIC    0x56504844
+
+typedef struct _BCRYPT_DH_PARAMETER_HEADER
+{
+    ULONG cbLength;
+    ULONG dwMagic;
+    ULONG cbKeyLength;
+} BCRYPT_DH_PARAMETER_HEADER;
+
+typedef struct _BCRYPT_DH_KEY_BLOB {
+    ULONG dwMagic;
+    ULONG cbKey;
+} BCRYPT_DH_KEY_BLOB, *PBCRYPT_DH_KEY_BLOB;
+
 #define BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO_VERSION 1
 
 #define BCRYPT_AUTH_MODE_CHAIN_CALLS_FLAG 0x00000001
@@ -289,6 +307,20 @@ typedef struct _BCRYPT_KEY_DATA_BLOB_HEADER
 #define KDF_HASH_ALGORITHM 0x00000000
 #define KDF_SECRET_PREPEND 0x00000001
 #define KDF_SECRET_APPEND  0x00000002
+#define KDF_HMAC_KEY       0x00000003
+#define KDF_TLS_PRF_LABEL  0x00000004
+#define KDF_TLS_PRF_SEED   0x00000005
+#define KDF_SECRET_HANDLE  0x00000006
+#define KDF_TLS_PRF_PROTOCOL 0x000007
+#define KDF_ALGORITHMID    0x00000008
+#define KDF_PARTYUINFO     0x00000009
+#define KDF_PARTYVINFO     0x0000000A
+#define KDF_SUPPPUBINFO    0x0000000B
+#define KDF_SUPPPRIVINFO   0x0000000C
+#define KDF_LABEL          0x0000000D
+#define KDF_CONTEXT        0x0000000E
+#define KDF_SALT           0x0000000F
+#define KDF_ITERATION_COUNT 0x0000010
 
 typedef struct _BCryptBuffer
 {

@@ -1,0 +1,11 @@
+--- dlls/api-ms-win-appmodel-runtime-l1-1-1/api-ms-win-appmodel-runtime-l1-1-1.spec
++++ dlls/api-ms-win-appmodel-runtime-l1-1-1/api-ms-win-appmodel-runtime-l1-1-1.spec
+@@ -21,7 +21,7 @@
+ @ stub OpenPackageInfoByFullName
+ @ stub PackageFamilyNameFromFullName
+ @ stub PackageFamilyNameFromId
+-@ stub PackageFullNameFromId
++@ stdcall PackageFullNameFromId(ptr ptr ptr) kernel32.PackageFullNameFromId
+ @ stdcall PackageIdFromFullName(wstr long ptr ptr) kernel32.PackageIdFromFullName
+ @ stub PackageNameAndPublisherIdFromFamilyName
+ @ stub ParseApplicationUserModelId

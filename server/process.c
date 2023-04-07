@@ -68,6 +68,7 @@ static void process_poll_event( struct fd *fd, int event );
 static struct list *process_get_kernel_obj_list( struct object *obj );
 static void process_destroy( struct object *obj );
 static void terminate_process( struct process *process, struct thread *skip, int exit_code );
+static void set_process_affinity( struct process *process, affinity_t affinity );
 
 static const struct object_ops process_ops =
 {
@@ -649,6 +650,13 @@ static int process_signaled( struct object *obj, struct wait_queue_entry *entry 
 {
     struct process *process = (struct process *)obj;
     return !process->running_threads;
+}
+
+static unsigned int process_get_fsync_idx( struct object *obj, enum fsync_type *type )
+{
+    struct process *process = (struct process *)obj;
+    *type = FSYNC_MANUAL_SERVER;
+    return process->fsync_idx;
 }
 
 static unsigned int process_map_access( struct object *obj, unsigned int access )
@@ -1385,6 +1393,9 @@ DECL_HANDLER(init_process_done)
     if (req->gui) process->idle_event = create_event( NULL, NULL, 0, 1, 0, NULL );
     if (process->debugger) set_process_debug_flag( process, 1 );
     reply->suspend = (current->suspend || process->suspend);
+
+    if (have_cpu_override)
+        process->cpu_override = *cpu_override;
 }
 
 /* open a handle to a process */

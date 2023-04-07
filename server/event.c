@@ -176,6 +176,13 @@ static int event_signaled( struct object *obj, struct wait_queue_entry *entry )
     return event->signaled;
 }
 
+static unsigned int event_get_fsync_idx( struct object *obj, enum fsync_type *type )
+{
+    struct event *event = (struct event *)obj;
+    *type = FSYNC_MANUAL_SERVER;
+    return event->fsync_idx;
+}
+
 static void event_satisfied( struct object *obj, struct wait_queue_entry *entry )
 {
     struct event *event = (struct event *)obj;

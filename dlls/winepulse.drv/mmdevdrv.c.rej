@@ -1,0 +1,11 @@
+--- dlls/winepulse.drv/mmdevdrv.c
++++ dlls/winepulse.drv/mmdevdrv.c
+@@ -1163,7 +1163,7 @@ static HRESULT pulse_stream_connect(ACImpl *This, UINT32 period_bytes) {
+     dump_attr(&attr);
+     if (This->dataflow == eRender)
+         ret = pa_stream_connect_playback(This->stream, NULL, &attr,
+-        PA_STREAM_START_CORKED|PA_STREAM_START_UNMUTED|PA_STREAM_ADJUST_LATENCY|moving, NULL, NULL);
++        PA_STREAM_START_CORKED|PA_STREAM_START_UNMUTED|PA_STREAM_ADJUST_LATENCY|PA_STREAM_VARIABLE_RATE|moving, NULL, NULL);
+     else
+         ret = pa_stream_connect_record(This->stream, NULL, &attr,
+         PA_STREAM_START_CORKED|PA_STREAM_START_UNMUTED|PA_STREAM_ADJUST_LATENCY|moving);

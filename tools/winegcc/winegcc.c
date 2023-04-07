@@ -443,7 +443,7 @@ static strarray *get_link_args( struct options *opts, const char *output_name )
         if (opts->unicode_app) strarray_add( flags, "-municode" );
         if (opts->nodefaultlibs || opts->use_msvcrt) strarray_add( flags, "-nodefaultlibs" );
         if (opts->nostartfiles || opts->use_msvcrt) strarray_add( flags, "-nostartfiles" );
-        if (opts->subsystem) strarray_add( flags, strmake("-Wl,--subsystem,%s", opts->subsystem ));
+        if (opts->subsystem && strcmp(opts->subsystem, "unixlib")) strarray_add( flags, strmake("-Wl,--subsystem,%s", opts->subsystem ));
 
         strarray_add( flags, "-Wl,--nxcompat" );
 
@@ -1192,7 +1192,7 @@ static void build(struct options* opts)
         strarray_add(spec_args, entry_point);
     }
 
-    if (opts->subsystem)
+    if (opts->subsystem && strcmp( opts->subsystem, "unixlib" ))
     {
         strarray_add(spec_args, "--subsystem");
         strarray_add(spec_args, opts->subsystem);

@@ -62,6 +62,9 @@
 #ifdef HAVE_SYS_POLL_H
 # include <sys/poll.h>
 #endif
+#if defined(__linux__)
+# include <linux/errqueue.h>
+#endif
 
 #define USE_WS_PREFIX
 
@@ -107,6 +110,7 @@ WINE_DECLARE_DEBUG_CHANNEL(winediag);
 typedef struct {
     int sid;
     IP_OPTION_INFORMATION default_opts;
+    BOOL unprivileged;
 } icmp_t;
 
 #define IP_OPTS_UNKNOWN     0
@@ -478,7 +482,11 @@ DWORD WINAPI IcmpSendEcho(
                     ier->Status=IP_SOURCE_QUENCH;
                     break;
                 }
+#if defined(__linux__)
+                if (!unprivileged && ier->Status!=IP_REQ_TIMED_OUT) {
+#else
                 if (ier->Status!=IP_REQ_TIMED_OUT) {
+#endif
                     struct ip* rep_ip_header;
                     struct icmp* rep_icmp_header;
                     /* The ICMP header size of all the packets we accept is the same */

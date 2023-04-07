@@ -202,6 +202,13 @@ static int timer_signaled( struct object *obj, struct wait_queue_entry *entry )
     return timer->signaled;
 }
 
+static unsigned int timer_get_fsync_idx( struct object *obj, enum fsync_type *type )
+{
+    struct timer *timer = (struct timer *)obj;
+    *type = timer->manual ? FSYNC_MANUAL_SERVER : FSYNC_AUTO_SERVER;
+    return timer->fsync_idx;
+}
+
 static void timer_satisfied( struct object *obj, struct wait_queue_entry *entry )
 {
     struct timer *timer = (struct timer *)obj;

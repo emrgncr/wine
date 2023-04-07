@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -30,6 +31,7 @@
 #include "initguid.h"
 #include "devguid.h"
 #include "devpkey.h"
+#include "ntddvdeo.h"
 #include "setupapi.h"
 #define WIN32_NO_STATUS
 #include "winternl.h"
@@ -193,21 +195,33 @@ fail:
 
 POINT virtual_screen_to_root(INT x, INT y)
 {
-    RECT virtual = get_virtual_screen_rect();
+    RECT virtual = fs_hack_get_real_virtual_screen();
     POINT pt;
 
-    pt.x = x - virtual.left;
-    pt.y = y - virtual.top;
+    TRACE("from %d,%d\n", x, y);
+
+    pt.x = x;
+    pt.y = y;
+    fs_hack_point_user_to_real(&pt);
+    TRACE("to real %d,%d\n", pt.x, pt.y);
+
+    pt.x -= virtual.left;
+    pt.y -= virtual.top;
+    TRACE("to root %d,%d\n", pt.x, pt.y);
     return pt;
 }
 
 POINT root_to_virtual_screen(INT x, INT y)
 {
-    RECT virtual = get_virtual_screen_rect();
+    RECT virtual = fs_hack_get_real_virtual_screen();
     POINT pt;
 
+    TRACE("from root %d,%d\n", x, y);
     pt.x = x + virtual.left;
     pt.y = y + virtual.top;
+    TRACE("to real %d,%d\n", pt.x, pt.y);
+    fs_hack_point_real_to_user(&pt);
+    TRACE("to user %d,%d\n", pt.x, pt.y);
     return pt;
 }
 
@@ -263,6 +277,11 @@ void X11DRV_DisplayDevices_SetHandler(const struct x11drv_display_device_handler
     }
 }
 
+struct x11drv_display_device_handler X11DRV_DisplayDevices_GetHandler(void)
+{
+    return host_handler;
+}
+
 void X11DRV_DisplayDevices_RegisterEventHandlers(void)
 {
     struct x11drv_display_device_handler *handler = is_virtual_desktop() ? &desktop_handler : &host_handler;
@@ -278,6 +297,10 @@ static BOOL X11DRV_InitGpu(HDEVINFO devinfo, const struct x11drv_gpu *gpu, INT g
     static const BOOL present = TRUE;
     SP_DEVINFO_DATA device_data = {sizeof(device_data)};
     WCHAR instanceW[MAX_PATH];
+<<<<<<< HEAD
+=======
+    DEVPROPTYPE property_type;
+>>>>>>> parent of bd27af974a2 (winex11: Add DriverDate registry property to display adapters.)
     WCHAR bufferW[1024];
     HKEY hkey = NULL;
     GUID guid;
@@ -285,6 +308,11 @@ static BOOL X11DRV_InitGpu(HDEVINFO devinfo, const struct x11drv_gpu *gpu, INT g
     DWORD size;
     BOOL ret = FALSE;
     FILETIME filetime;
+<<<<<<< HEAD
+=======
+
+    TRACE("GPU id:0x%s name:%s.\n", wine_dbgstr_longlong(gpu->id), wine_dbgstr_w(gpu->name));
+>>>>>>> parent of bd27af974a2 (winex11: Add DriverDate registry property to display adapters.)
 
     sprintfW(instanceW, gpu_instance_fmtW, gpu->vendor_id, gpu->device_id, gpu->subsys_id, gpu->revision_id, gpu_index);
     if (!SetupDiOpenDeviceInfoW(devinfo, instanceW, NULL, 0, &device_data))
@@ -293,6 +321,20 @@ static BOOL X11DRV_InitGpu(HDEVINFO devinfo, const struct x11drv_gpu *gpu, INT g
         if (!SetupDiRegisterDeviceInfo(devinfo, &device_data, 0, NULL, NULL, NULL))
             goto done;
     }
+
+    /* Register GUID_DEVINTERFACE_DISPLAY_ADAPTER */
+    if (!SetupDiCreateDeviceInterfaceW(devinfo, &device_data, &GUID_DEVINTERFACE_DISPLAY_ADAPTER, NULL, 0, &iface_data))
+        goto done;
+
+    if (!link_device(instanceW, &GUID_DEVINTERFACE_DISPLAY_ADAPTER))
+        goto done;
+
+    /* Register GUID_DISPLAY_DEVICE_ARRIVAL */
+    if (!SetupDiCreateDeviceInterfaceW(devinfo, &device_data, &GUID_DISPLAY_DEVICE_ARRIVAL, NULL, 0, &iface_data))
+        goto done;
+
+    if (!link_device(instanceW, &GUID_DISPLAY_DEVICE_ARRIVAL))
+        goto done;
 
     /* Write HardwareID registry property, REG_MULTI_SZ */
     written = sprintfW(bufferW, gpu_hardware_id_fmtW, gpu->vendor_id, gpu->device_id);
@@ -420,6 +462,7 @@ done:
 static BOOL X11DRV_InitMonitor(HDEVINFO devinfo, const struct x11drv_monitor *monitor, int monitor_index,
                                int video_index)
 {
+    SP_DEVICE_INTERFACE_DATA iface_data = {sizeof(iface_data)};
     SP_DEVINFO_DATA device_data = {sizeof(SP_DEVINFO_DATA)};
     WCHAR bufferW[MAX_PATH];
     HKEY hkey;
@@ -431,6 +474,13 @@ static BOOL X11DRV_InitMonitor(HDEVINFO devinfo, const struct x11drv_monitor *mo
     if (!SetupDiRegisterDeviceInfo(devinfo, &device_data, 0, NULL, NULL, NULL))
         goto done;
 
+    /* Register GUID_DEVINTERFACE_MONITOR */
+    if (!SetupDiCreateDeviceInterfaceW(devinfo, &device_data, &GUID_DEVINTERFACE_MONITOR, NULL, 0, &iface_data))
+        goto done;
+
+    if (!link_device(bufferW, &GUID_DEVINTERFACE_MONITOR))
+        goto done;
+
     /* Write HardwareID registry property */
     if (!SetupDiSetDeviceRegistryPropertyW(devinfo, &device_data, SPDRP_HARDWAREID,
                                            (const BYTE *)monitor_hardware_idW, sizeof(monitor_hardware_idW)))
@@ -439,6 +489,14 @@ static BOOL X11DRV_InitMonitor(HDEVINFO devinfo, const struct x11drv_monitor *mo
     /* Create driver key */
     hkey = SetupDiCreateDevRegKeyW(devinfo, &device_data, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
     RegCloseKey(hkey);
+
+    /* This is needed for MK11, but breaks Hitman 2, so we use a specific check for MK11 */
+    const char *sgi = getenv("SteamGameId");
+    if ((sgi && !strcmp(sgi, "976310"))) {
+        /* Create device key */
+        hkey = SetupDiCreateDevRegKeyW(devinfo, &device_data, DICS_FLAG_GLOBAL, 0, DIREG_DEV, NULL, NULL);
+        RegCloseKey(hkey);
+    }
 
     /* FIXME:
      * Following properties are Wine specific, see comments in X11DRV_InitAdapter for details */

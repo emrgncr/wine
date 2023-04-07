@@ -1,0 +1,9 @@
+--- dlls/ext-ms-win-kernel32-package-l1-1-1/ext-ms-win-kernel32-package-l1-1-1.spec
++++ dlls/ext-ms-win-kernel32-package-l1-1-1/ext-ms-win-kernel32-package-l1-1-1.spec
+@@ -17,5 +17,5 @@
+ @ stub OpenPackageInfoByFullName
+ @ stub PackageFamilyNameFromFullName
+ @ stub PackageFamilyNameFromId
+-@ stub PackageFullNameFromId
++@ stdcall PackageFullNameFromId(ptr ptr ptr) kernel32.PackageFullNameFromId
+ @ stdcall PackageIdFromFullName(wstr long ptr ptr) kernel32.PackageIdFromFullName

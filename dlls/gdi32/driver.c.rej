@@ -1,0 +1,26 @@
+--- dlls/gdi32/driver.c
++++ dlls/gdi32/driver.c
+@@ -1457,7 +1469,6 @@ NTSTATUS WINAPI D3DKMTOpenAdapterFromGdiDisplayName( D3DKMT_OPENADAPTERFROMGDIDI
+     WCHAR *end, key_nameW[MAX_PATH], bufferW[MAX_PATH];
+     HDEVINFO devinfo = INVALID_HANDLE_VALUE;
+     NTSTATUS status = STATUS_UNSUCCESSFUL;
+-    static D3DKMT_HANDLE handle_start = 0;
+     struct d3dkmt_adapter *adapter;
+     SP_DEVINFO_DATA device_data;
+     DWORD size, state_flags;
+@@ -1512,13 +1523,9 @@ NTSTATUS WINAPI D3DKMTOpenAdapterFromGdiDisplayName( D3DKMT_OPENADAPTERFROMGDIDI
+                                     (BYTE *)&luid, sizeof( luid ), NULL, 0))
+         goto done;
+ 
+-    EnterCriticalSection( &driver_section );
+-    /* D3DKMT_HANDLE is UINT, so we can't use pointer as handle */
+-    adapter->handle = ++handle_start;
+-    list_add_tail( &d3dkmt_adapters, &adapter->entry );
+-    LeaveCriticalSection( &driver_section );
++    d3dkmt_adapter_alloc_handle( adapter );
+ 
+-    desc->hAdapter = handle_start;
++    desc->hAdapter = adapter->handle;
+     desc->AdapterLuid = luid;
+     desc->VidPnSourceId = index;
+     status = STATUS_SUCCESS;

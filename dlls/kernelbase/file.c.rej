@@ -1,0 +1,16 @@
+--- dlls/kernelbase/file.c
++++ dlls/kernelbase/file.c
+@@ -546,6 +613,13 @@ HANDLE WINAPI DECLSPEC_HOTPATCH CreateFileW( LPCWSTR filename, DWORD access, DWO
+            (sharing & FILE_SHARE_DELETE) ? "FILE_SHARE_DELETE " : "",
+            creation, attributes);
+ 
++    if (is_file_blacklisted(filename))
++    {
++        FIXME("\"%s\" is blacklisted.\n", debugstr_w(filename));
++        SetLastError( ERROR_FILE_NOT_FOUND );
++        return INVALID_HANDLE_VALUE;
++    }
++
+     if ((GetVersion() & 0x80000000) && !wcsncmp( filename, L"\\\\.\\", 4 ) &&
+         !RtlIsDosDeviceName_U( filename + 4 ) &&
+         wcsnicmp( filename + 4, L"PIPE\\", 5 ) &&
